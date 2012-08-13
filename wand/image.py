@@ -250,12 +250,19 @@ class Image(Resource):
     :type file: file object
     :param filename: opens an image of the ``filename`` string
     :type filename: :class:`basestring`
+    :param format: forces filename to  buffer.``format`` to help
+                   imagemagick detect the file format. Used only in
+                   ``blob`` or ``file`` cases
+    :type format: :class:`basestring`
 
     .. versionadded:: 0.1.5
        The ``file`` parameter.
 
     .. versionadded:: 0.1.1
        The ``blob`` parameter.
+
+    .. versionadded:: 0.2.1
+       The ``format`` parameter.
 
     .. describe:: [left:right, top:bottom]
 
@@ -290,7 +297,8 @@ class Image(Resource):
 
     __slots__ = '_wand',
 
-    def __init__(self, image=None, blob=None, file=None, filename=None):
+    def __init__(self, image=None, blob=None, file=None, filename=None,
+                 format=None):
         args = image, blob, file, filename
         if all(a is None for a in args):
             raise TypeError('missing arguments')
@@ -299,16 +307,24 @@ class Image(Resource):
                  for b in args[:i] + args[i + 1:]):
             raise TypeError('parameters are exclusive each other; use only '
                             'one at once')
+        elif not (format is None or isinstance(format, basestring)):
+            raise TypeError('format must be a string, not ' + repr(format))
         with self.allocate():
             if image is not None:
                 if not isinstance(image, Image):
                     raise TypeError('image must be a wand.image.Image '
                                     'instance, not ' + repr(image))
+                elif format:
+                    raise TypeError('format option cannot be used with image '
+                                    'nor filename')
                 self.wand = library.CloneMagickWand(image.wand)
             else:
                 self.wand = library.NewMagickWand()
                 read = False
                 if file is not None:
+                    if format:
+                        library.MagickSetFilename(self.wand,
+                                                  'buffer.' + format)
                     if (isinstance(file, types.FileType) and
                         hasattr(libc, 'fdopen')):
                         fd = libc.fdopen(file.fileno(), file.mode)
@@ -322,6 +338,9 @@ class Image(Resource):
                         blob = file.read()
                         file = None
                 if blob is not None:
+                    if format:
+                        library.MagickSetFilename(self.wand,
+                                                  'buffer.' + format)
                     if not isinstance(blob, collections.Iterable):
                         raise TypeError('blob must be iterable, not ' +
                                         repr(blob))
@@ -332,6 +351,11 @@ class Image(Resource):
                     library.MagickReadImageBlob(self.wand, blob, len(blob))
                     read = True
                 elif filename is not None:
+                    if format:
+                        raise TypeError(
+                            'format option cannot be used with image '
+                            'nor filename'
+                        )
                     library.MagickReadImage(self.wand, filename)
                     read = True
                 if not read:
@@ -483,6 +507,21 @@ class Image(Resource):
     def size(self):
         """(:class:`tuple`) The pair of (:attr:`width`, :attr:`height`)."""
         return self.width, self.height
+
+    @property
+    def depth(self):
+        """(:class:`numbers.Integral`) The depth of this image.
+
+        .. versionadded:: 0.2.1
+
+        """
+        return library.MagickGetImageDepth(self.wand)
+
+    @depth.setter
+    def depth(self, depth):
+        r = library.MagickSetImageDepth(self.wand, depth)
+        if not r:
+            raise self.raise_exception()
 
     @property
     def format(self):
@@ -767,7 +806,7 @@ class Image(Resource):
         .. versionadded:: 0.2.0
 
         """
-        library.MagickResetImagePage(self.wand)
+        library.MagickResetImagePage(self.wand, None)
 
     def resize(self, width=None, height=None, filter='triangle', blur=1):
         """Resizes the image.

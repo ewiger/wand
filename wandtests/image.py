@@ -60,6 +60,16 @@ def new_from_blob():
 
 
 @tests.test
+def new_with_format():
+    with open(asset('google.ico'), 'rb') as f:
+        blob = f.read()
+    with raises(Exception):
+        Image(blob=blob)
+    with Image(blob=blob, format='ico') as img:
+        assert img.size == (16, 16)
+
+
+@tests.test
 def clone():
     """Cloens the existing image."""
     funcs = (lambda img: Image(image=img),
@@ -144,6 +154,18 @@ def size():
         assert img.height == 599
         assert len(img) == 599
 
+@tests.test
+def get_depth():
+    """Gets the image depth"""
+    with Image(filename=asset('mona-lisa.jpg')) as img:
+        assert img.depth == 8
+
+@tests.test
+def set_depth():
+    """Sets the image depth"""
+    with Image(filename=asset('mona-lisa.jpg')) as img:
+        img.depth = 16
+        assert img.depth == 16
 
 @tests.test
 def get_format():
@@ -222,9 +244,9 @@ def trim():
 def get_mimetype():
     """Gets mimetypes of the image."""
     with Image(filename=asset('mona-lisa.jpg')) as img:
-        assert img.mimetype == 'image/jpeg'
+        assert img.mimetype in ('image/jpeg', 'image/x-jpeg')
     with Image(filename=asset('croptest.png')) as img:
-        assert img.mimetype == 'image/png'
+        assert img.mimetype in ('image/png', 'image/x-png')
 
 
 @tests.test
@@ -490,7 +512,7 @@ def rotate():
         with Color('red') as bg:
             with img.clone() as cloned:
                 cloned.rotate(45, bg)
-                assert 176 <= cloned.width == cloned.height <= 177
+                assert 176 <= cloned.width == cloned.height <= 178
                 assert bg == cloned[0, 0] == cloned[0, -1]
                 assert bg == cloned[-1, 0] == cloned[-1, -1]
                 with Color('black') as black:
@@ -548,6 +570,7 @@ def set_background_color():
             img.background_color = color
             assert img.background_color == color
 
+
 @tests.test
 def watermark():
     """Adds  watermark to an image."""
@@ -558,6 +581,7 @@ def watermark():
                 msg = 'img = {0!r}, marked = {1!r}'.format(
                     img.signature, marked.signature)
                 assert img == marked, msg
+
 
 @tests.test
 def reset_coords():
@@ -572,5 +596,3 @@ def reset_coords():
                 msg = 'img = {0!r}, control = {1!r}'.format(
                     img.signature, control.signature)
                 assert img == control, msg
-
-

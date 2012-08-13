@@ -56,7 +56,7 @@ setup(
     author_email='minhee@dahlia.kr',
     maintainer='Hong Minhee',
     maintainer_email='minhee@dahlia.kr',
-    url='http://dahlia.github.com/wand/',
+    url='http://dahlia.kr/wand/',
     tests_require=['Attest'],
     test_loader='attest:auto_reporter.test_loader',
     test_suite='wandtests.tests',

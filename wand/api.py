@@ -106,6 +106,8 @@ try:
 
     library.MagickClearException.argtypes = [ctypes.c_void_p]
 
+    library.MagickSetFilename.argtypes = [ctypes.c_void_p, ctypes.c_char_p]
+
     library.MagickReadImageBlob.argtypes = [ctypes.c_void_p, ctypes.c_void_p,
                                             ctypes.c_size_t]
 
@@ -144,11 +146,16 @@ try:
     library.MagickGetImageHeight.argtypes = [ctypes.c_void_p]
     library.MagickGetImageHeight.restype = ctypes.c_size_t
 
+    library.MagickGetImageDepth.argtypes = [ctypes.c_void_p]
+    library.MagickGetImageDepth.restype = ctypes.c_size_t
+
+    library.MagickSetImageDepth.argtypes = [ctypes.c_void_p]
+
     library.MagickCropImage.argtypes = [ctypes.c_void_p, ctypes.c_size_t,
                                         ctypes.c_size_t, ctypes.c_ssize_t,
                                         ctypes.c_ssize_t]
 
-    library.MagickResetImagePage.argtypes = [ctypes.c_void_p]
+    library.MagickResetImagePage.argtypes = [ctypes.c_void_p, ctypes.c_char_p]
 
     library.MagickResizeImage.argtypes = [ctypes.c_void_p, ctypes.c_size_t,
                                           ctypes.c_size_t, ctypes.c_int,
