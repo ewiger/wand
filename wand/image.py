@@ -931,7 +931,7 @@ class Image(Resource):
                                                t)
             self.raise_exception()
 
-    def composite(self, image, left, top):
+    def composite(self, image, left, top, operator='over'):
         """Places the supplied ``image`` over the current image, with the top
         left corner of ``image`` at coordinates ``left``, ``top`` of the
         current image.  The dimensions of the current image are not changed.
@@ -942,12 +942,20 @@ class Image(Resource):
         :type left: :class:`numbers.Integral`
         :param top: the y-coordinate where `image` will be placed
         :type top: :class:`numbers.Integral`
+        :param operator: an operator's name string one from 
+                         wand.image.COMPOSITE_OPS ('over' by default)
+        :type operator: :class:`basestring`
 
         .. versionadded:: 0.2.0
 
         """
+        if not isinstance(operator, basestring) \
+            or operator not in COMPOSITE_OPS:
+            raise TypeError("Type value must be a string from "
+                            "wand.image.COMPOSITE_OPS"
+                            ', not ' + repr(image_type))
         library.MagickCompositeImage(self.wand, image.wand,
-                                     COMPOSITE_OPS.index('over'), left, top)
+                                     COMPOSITE_OPS.index(operator), left, top)
         self.raise_exception()
 
     def watermark(self, image, transparency=0.0, left=0, top=0):
